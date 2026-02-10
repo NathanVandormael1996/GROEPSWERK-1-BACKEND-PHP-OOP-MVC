@@ -1,18 +1,18 @@
-Environment files
+# Environment files
 .env
 
-Dependencies
+# Dependencies
 /vendor
 
-IDE
+# IDE
 .idea/
 *.swp
 *.swo
 *~
 
-OS
+# OS
 .DS_Store
 Thumbs.db
 
-Logs
+# Logs
 *.log
