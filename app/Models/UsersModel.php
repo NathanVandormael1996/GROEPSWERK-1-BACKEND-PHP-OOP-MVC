@@ -36,6 +36,12 @@ final class UsersModel
         return $this->id;
     }
 
+    public function getUsername(): string
+    {
+        $parts = explode('@', $this->email);
+        return $parts[0] ?? 'Unknown Soldier';
+    }
+
     public function getRoleId(): int
     {
         return $this->roleId;
