@@ -6,11 +6,13 @@ session_start();
 require_once __DIR__ . '/../app/autoload.php';
 
 use App\Controllers\OrdersController;
+use App\Controllers\FactionsController;
 use App\Core\Router;
 use App\Core\Database;
 use App\Controllers\AuthController;
 use App\Controllers\ProductsController;
 use App\Repositories\OrdersRepository;
+use App\Repositories\FactionsRepository;
 use App\Repositories\UsersRepository;
 use App\Repositories\ProductsRepository;
 
@@ -47,7 +49,7 @@ $router->get('/login', function () {
 $router->post('/login', function () {
     (new AuthController(UsersRepository::make()))->login();
 });
-$router->get('/logout', function () {
+$router->post('/logout', function () {
     session_destroy();
     header('Location: ' . BASE_PATH . '/login');
     exit;
@@ -108,6 +110,36 @@ $router->post('/orders/{id}/update', function ($id) {
 $router->post('/orders/{id}/delete', function ($id) {
     (new OrdersController(OrdersRepository::make()))->delete((int)$id);
 });
+
+// --- FACTION ROUTES ---
+$router->get('/factions', function () {
+    (new FactionsController(FactionsRepository::make()))->index();
+});
+
+$router->get('/factions/{id}', function ($id) {
+    (new App\Controllers\FactionsController(App\Repositories\FactionsRepository::make()))->show((int)$id);
+});
+
+$router->get('/factions/create', function () {
+    (new FactionsController(FactionsRepository::make()))->create();
+});
+
+$router->post('/factions/store', function () {
+    (new FactionsController(FactionsRepository::make()))->store();
+});
+
+$router->get('/factions/{id}/edit', function ($id) {
+    (new FactionsController(FactionsRepository::make()))->edit((int)$id);
+});
+
+$router->post('/factions/{id}/update', function ($id) {
+    (new FactionsController(FactionsRepository::make()))->update((int)$id);
+});
+
+$router->post('/factions/{id}/delete', function ($id) {
+    (new FactionsController(FactionsRepository::make()))->delete((int)$id);
+});
+
 
 try {
     $router->dispatch($uri, $method);
