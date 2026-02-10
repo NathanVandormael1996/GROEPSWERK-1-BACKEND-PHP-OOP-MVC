@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Repositories\OrdersRepository;
-use App\Repositories\ProductsRepository; // BELANGRIJK: Deze hebben we nodig voor de cart!
-use App\Models\OrdersModel;
+use App\Repositories\ProductsRepository;
+use App\Core\Auth; // <--- HIER GEBRUIKEN WE HEM NU
 
 final class OrdersController
 {
@@ -18,9 +18,54 @@ final class OrdersController
         $this->productsRepository = $productsRepository;
     }
 
+    public function store(): void
+    {
+        if (!Auth::check()) {
+            header('Location: ' . BASE_PATH . '/login');
+            exit;
+        }
+
+        $cart = $_SESSION['cart'] ?? [];
+        if (empty($cart)) {
+            header('Location: ' . BASE_PATH . '/');
+            exit;
+        }
+
+        if (!$this->productsRepository) {
+            die("Critical Error: ProductsRepository not loaded.");
+        }
+
+        $cartItems = [];
+        $totalPrice = 0;
+
+        foreach ($cart as $productId => $quantity) {
+            $product = $this->productsRepository->findById($productId);
+
+            if ($product) {
+                if ($product->getStockQuantity() < $quantity) {
+                    $errorMsg = "Insufficient stock for " . $product->getName() . ". Available: " . $product->getStockQuantity();
+                    header('Location: ' . BASE_PATH . '/cart?error=' . urlencode($errorMsg));
+                    exit;
+                }
+
+                $cartItems[] = [
+                    'product' => $product,
+                    'quantity' => $quantity
+                ];
+                $totalPrice += $product->getPrice() * $quantity;
+            }
+        }
+
+        $this->ordersRepository->createOrderFromCart($_SESSION['user_id'], (float)$totalPrice, $cartItems);
+
+        unset($_SESSION['cart']);
+        header('Location: ' . BASE_PATH . '/?success=order_placed');
+        exit;
+    }
+
     public function index(): void
     {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
+        if (!Auth::isManager()) {
             header('Location: ' . BASE_PATH . '/login');
             exit;
         }
@@ -35,8 +80,7 @@ final class OrdersController
 
     public function show(int $id): void
     {
-        // Admin check
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
+        if (!Auth::isManager()) {
             header('Location: ' . BASE_PATH . '/login');
             exit;
         }
@@ -54,46 +98,13 @@ final class OrdersController
         require __DIR__ . '/../Views/layout/footer.php';
     }
 
-    public function store(): void
-    {
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: ' . BASE_PATH . '/login');
-            exit;
-        }
-
-        $cart = $_SESSION['cart'] ?? [];
-        if (empty($cart)) {
-            header('Location: ' . BASE_PATH . '/');
-            exit;
-        }
-
-        if (!$this->productsRepository) {
-            die("ProductsRepository missing in Controller");
-        }
-
-        $cartItems = [];
-        $totalPrice = 0;
-
-        foreach ($cart as $productId => $quantity) {
-            $product = $this->productsRepository->findById($productId);
-            if ($product) {
-                $cartItems[] = ['product' => $product, 'quantity' => $quantity];
-                $totalPrice += $product->getPrice() * $quantity;
-            }
-        }
-
-        $this->ordersRepository->createOrderFromCart($_SESSION['user_id'], $totalPrice, $cartItems);
-        unset($_SESSION['cart']);
-        header('Location: ' . BASE_PATH . '/?success=order_placed');
-        exit;
-    }
-
     public function delete(int $id): void
     {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] !== 4) {
+        if (!Auth::isAdmin()) {
             header('Location: ' . BASE_PATH . '/orders?error=forbidden');
             exit;
         }
+
         $this->ordersRepository->delete($id);
         header('Location: ' . BASE_PATH . '/orders?success=deleted');
         exit;
