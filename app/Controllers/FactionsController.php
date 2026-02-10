@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Models\Faction;
+use App\Models\FactionsModel;
 use App\Repositories\FactionsRepository;
 
 final class FactionsController
@@ -60,7 +60,7 @@ final class FactionsController
     {
         $this->ensureAdmin();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $faction = new Faction(
+            $faction = new FactionsModel(
                 null,
                 htmlspecialchars($_POST['name']),
                 htmlspecialchars($_POST['description']),
@@ -88,7 +88,7 @@ final class FactionsController
     {
         $this->ensureAdmin();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $faction = new Faction(
+            $faction = new FactionsModel(
                 $id,
                 htmlspecialchars($_POST['name']),
                 htmlspecialchars($_POST['description']),

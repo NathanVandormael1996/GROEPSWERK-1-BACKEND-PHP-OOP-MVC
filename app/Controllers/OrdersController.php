@@ -3,131 +3,89 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Models\OrdersModel;
 use App\Repositories\OrdersRepository;
+use App\Repositories\ProductsRepository; // BELANGRIJK: Deze hebben we nodig voor de cart!
+use App\Models\OrdersModel;
 
 final class OrdersController
 {
     private OrdersRepository $ordersRepository;
+    private ?ProductsRepository $productsRepository;
 
-    public function __construct(OrdersRepository $ordersRepository)
+    public function __construct(OrdersRepository $ordersRepository, ?ProductsRepository $productsRepository = null)
     {
         $this->ordersRepository = $ordersRepository;
+        $this->productsRepository = $productsRepository;
     }
 
     public function index(): void
     {
+        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
+            header('Location: ' . BASE_PATH . '/login');
+            exit;
+        }
+
         $orders = $this->ordersRepository->findAll();
         $title = "Orders Overview";
 
-        ob_start();
+        require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/orders/index.php';
-        $content = ob_get_clean();
-
-        require __DIR__ . '/../Views/layout/public.php';
+        require __DIR__ . '/../Views/layout/footer.php';
     }
 
     public function show(int $id): void
     {
+        // Admin check
+        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
+            header('Location: ' . BASE_PATH . '/login');
+            exit;
+        }
+
         $order = $this->ordersRepository->findById($id);
         if (!$order) {
-            header('Location: ' . BASE_PATH . '/orders?error=notfound');
+            header('Location: ' . BASE_PATH . '/orders');
             exit;
         }
 
         $title = "Order #" . $order->getId();
 
-        ob_start();
+        require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/orders/show.php';
-        $content = ob_get_clean();
-
-        require __DIR__ . '/../Views/layout/public.php';
-    }
-
-    public function create(): void
-    {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
-            header('Location: ' . BASE_PATH . '/orders?error=unauthorized');
-            exit;
-        }
-
-        $title = "Create Order";
-
-        ob_start();
-        require __DIR__ . '/../Views/orders/create.php';
-        $content = ob_get_clean();
-
-        require __DIR__ . '/../Views/layout/public.php';
+        require __DIR__ . '/../Views/layout/footer.php';
     }
 
     public function store(): void
     {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
-            header('Location: ' . BASE_PATH . '/orders?error=unauthorized');
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . BASE_PATH . '/login');
             exit;
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $order = new OrdersModel(
-                0, // dummy id, DB regelt AUTO_INCREMENT
-                !empty($_POST['user_id']) ? (int) $_POST['user_id'] : null,
-                (float) $_POST['total_price'],
-                date('Y-m-d H:i:s'),
-                null,
-                null
-            );
-
-            $this->ordersRepository->create($order);
-
-            header('Location: ' . BASE_PATH . '/orders?success=created');
-            exit;
-        }
-    }
-
-    public function edit(int $id): void
-    {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
-            header('Location: ' . BASE_PATH . '/orders?error=unauthorized');
+        $cart = $_SESSION['cart'] ?? [];
+        if (empty($cart)) {
+            header('Location: ' . BASE_PATH . '/');
             exit;
         }
 
-        $order = $this->ordersRepository->findById($id);
-        if (!$order) {
-            header('Location: ' . BASE_PATH . '/orders?error=notfound');
-            exit;
+        if (!$this->productsRepository) {
+            die("ProductsRepository missing in Controller");
         }
 
-        $title = "Edit Order";
+        $cartItems = [];
+        $totalPrice = 0;
 
-        ob_start();
-        require __DIR__ . '/../Views/orders/edit.php';
-        $content = ob_get_clean();
-
-        require __DIR__ . '/../Views/layout/public.php';
-    }
-
-    public function update(int $id): void
-    {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
-            header('Location: ' . BASE_PATH . '/orders?error=unauthorized');
-            exit;
+        foreach ($cart as $productId => $quantity) {
+            $product = $this->productsRepository->findById($productId);
+            if ($product) {
+                $cartItems[] = ['product' => $product, 'quantity' => $quantity];
+                $totalPrice += $product->getPrice() * $quantity;
+            }
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $order = new OrdersModel(
-                $id,
-                isset($_POST['user_id']) ? (int) $_POST['user_id'] : null,
-                (float) $_POST['total_price'],
-                '',
-                date('Y-m-d H:i:s'),
-                null
-            );
-
-            $this->ordersRepository->update($order);
-
-            header('Location: ' . BASE_PATH . '/orders?success=updated');
-            exit;
-        }
+        $this->ordersRepository->createOrderFromCart($_SESSION['user_id'], $totalPrice, $cartItems);
+        unset($_SESSION['cart']);
+        header('Location: ' . BASE_PATH . '/?success=order_placed');
+        exit;
     }
 
     public function delete(int $id): void
@@ -136,9 +94,7 @@ final class OrdersController
             header('Location: ' . BASE_PATH . '/orders?error=forbidden');
             exit;
         }
-
         $this->ordersRepository->delete($id);
-
         header('Location: ' . BASE_PATH . '/orders?success=deleted');
         exit;
     }

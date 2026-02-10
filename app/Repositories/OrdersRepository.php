@@ -11,68 +11,70 @@ final class OrdersRepository
 {
     private ?PDO $pdo = null;
 
-    public function __construct(PDO $pdo)
-    {
-        $this->pdo = $pdo;
-    }
-
     public static function make(): self
     {
         return new self(Database::getConnection());
     }
 
+    public function __construct(PDO $pdo)
+    {
+        $this->pdo = $pdo;
+    }
+
     public function findAll(): array
     {
-        $stmt = $this->pdo->query(
-            'SELECT * FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC'
-        );
-
+        $stmt = $this->pdo->query('SELECT * FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC');
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $orders = [];
         foreach ($rows as $row) {
             $orders[] = $this->mapRowToModel($row);
         }
-
         return $orders;
     }
 
     public function findById(int $id): ?OrdersModel
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT * FROM orders WHERE id = :id AND deleted_at IS NULL'
-        );
+        $stmt = $this->pdo->prepare('SELECT * FROM orders WHERE id = :id AND deleted_at IS NULL');
         $stmt->execute(['id' => $id]);
-
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
         return $row ? $this->mapRowToModel($row) : null;
     }
 
-    public function create(OrdersModel $order): bool
+    public function createOrderFromCart(int $userId, float $totalPrice, array $cartItems): int
     {
-        $stmt = $this->pdo->prepare(
-            'INSERT INTO orders (user_id, total_price, created_at)
-         VALUES (:user_id, :total_price, :created_at)'
-        );
+        try {
+            $this->pdo->beginTransaction();
 
-        return $stmt->execute([
-            'user_id'     => $order->getUserId(),
-            'total_price' => $order->getTotalPrice(),
-            'created_at'  => $order->getCreatedAt(),
-        ]);
+            $stmt = $this->pdo->prepare("INSERT INTO orders (user_id, total_price, created_at) VALUES (?, ?, NOW())");
+            $stmt->execute([$userId, $totalPrice]);
+            $orderId = (int)$this->pdo->lastInsertId();
+
+            $stmtLine = $this->pdo->prepare("INSERT INTO order_products (order_id, product_id, quantity, price_at_purchase) VALUES (?, ?, ?, ?)");
+
+            foreach ($cartItems as $item) {
+                $stmtLine->execute([
+                    $orderId,
+                    $item['product']->getId(),
+                    $item['quantity'],
+                    $item['product']->getPrice()
+                ]);
+            }
+
+            $this->pdo->commit();
+            return $orderId;
+
+        } catch (\Exception $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
     }
 
     public function update(OrdersModel $order): bool
     {
         $stmt = $this->pdo->prepare(
-            'UPDATE orders SET
-                user_id = :user_id,
-                total_price = :total_price,
-                updated_at = NOW()
-             WHERE id = :id AND deleted_at IS NULL'
+            'UPDATE orders SET user_id = :user_id, total_price = :total_price, updated_at = NOW() WHERE id = :id'
         );
-
         return $stmt->execute([
             'id'          => $order->getId(),
             'user_id'     => $order->getUserId(),
@@ -82,10 +84,7 @@ final class OrdersRepository
 
     public function delete(int $id): bool
     {
-        $stmt = $this->pdo->prepare(
-            'UPDATE orders SET deleted_at = NOW() WHERE id = :id'
-        );
-
+        $stmt = $this->pdo->prepare('UPDATE orders SET deleted_at = NOW() WHERE id = :id');
         return $stmt->execute(['id' => $id]);
     }
 
