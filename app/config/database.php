@@ -1,10 +1,17 @@
 <?php
+// database.php
 declare(strict_types=1);
 
+$env = parse_ini_file(__DIR__ . '/.env');
+
+if ($env === false) {
+    die("Kan het .env bestand niet vinden of lezen!");
+}
+
 return [
-    'host'    => 'aws-1-eu-west-1.pooler.supabase.com',
-    'dbname'  => 'postgres',
-    'user'    => 'postgres.fhohwqzvhjtjqyfyyfvzt',
-    'pass'    => 'BloodAngels1231',
-    'port'    => '6543',
+    'host'    => $env['DB_HOST'],
+    'dbname'  => $env['DB_NAME'],
+    'user'    => $env['DB_USER'],
+    'pass'    => $env['DB_PASS'],
+    'port'    => $env['DB_PORT'],
 ];
