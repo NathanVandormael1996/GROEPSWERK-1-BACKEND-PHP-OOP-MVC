@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-// FOUT WAS HIER: use App\Models\Faction;
 use App\Models\FactionsModel;
 use App\Repositories\FactionsRepository;
 
@@ -61,7 +60,6 @@ final class FactionsController
     {
         $this->ensureAdmin();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // AANGEPAST: Faction -> FactionsModel
             $faction = new FactionsModel(
                 null,
                 htmlspecialchars($_POST['name']),
