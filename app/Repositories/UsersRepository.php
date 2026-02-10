@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Models\Database;
+use App\Core\Database;
 use App\Models\UsersModel;
 use PDO;
 
@@ -11,64 +11,51 @@ final class UsersRepository
 {
     private ?PDO $pdo = null;
 
+    public function __construct(PDO $pdo) {
+        $this->pdo = $pdo;
+    }
+
     public static function make(): self
     {
         return new self(Database::getConnection());
     }
 
-    public function create(UsersModel $user): int
+    public function findByEmail(string $email): ?UsersModel
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO users (role_id, email, password_hash, created_at)
-             VALUES (:role_id, :email, :password_hash, NOW())'
+            'SELECT * FROM users WHERE email = :email'
         );
 
-        $stmt->execute([
-            'role_id'       => $user->getRoleId(),
-            'email'         => $user->getEmail(),
-            'password_hash' => $user->getPasswordHash(),
-            'created_at'    => $user->getCreatedAt(),
-        ]);
+        $stmt->execute(['email' => $email]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return (int) $this->pdo->lastInsertId();
+        if (!$row) {
+            return null;
+        }
+
+        return $this->mapRowToModel($row);
     }
 
     public function findAll(): array
     {
-        $stmt = $this->pdo->query(
-            'SELECT id, role_id, email, password_hash, created_at FROM users'
-        );
-
+        $stmt = $this->pdo->query('SELECT * FROM users');
         $users = [];
 
-        foreach ($stmt->fetchAll() as $row) {
-            $users[] = new UsersModel(
-                (int) $row['id'],
-                (int) $row['role_id'],
-                $row['email'],
-                $row['password_hash'],
-                $row['created_at']
-            );
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $users[] = $this->mapRowToModel($row);
         }
 
         return $users;
     }
 
-    public function update(UsersModel $user): bool
+    private function mapRowToModel(array $row): UsersModel
     {
-        $stmt = $this->pdo->prepare(
-            'UPDATE users
-             SET role_id = :role_id,
-                 email = :email,
-                 password_hash = :password_hash
-             WHERE id = :id'
+        return new UsersModel(
+            (int)$row['id'],
+            (int)$row['role_id'],
+            $row['email'],
+            $row['password_hash'],
+            $row['created_at']
         );
-
-        return $stmt->execute([
-            'id'            => $user->getId(),
-            'role_id'       => $user->getRoleId(),
-            'email'         => $user->getEmail(),
-            'password_hash' => $user->getPasswordHash(),
-        ]);
     }
 }
