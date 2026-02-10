@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use PDO;
+use App\Models\Product;
 
 class ProductRepository
 {
@@ -14,6 +15,45 @@ class ProductRepository
         $this->db = $db;
     }
 
+    public function getAllActive(): array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM products WHERE is_deleted = 0");
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $products = [];
+        foreach ($rows as $row) {
+            $products[] = new Product(
+                (int)$row['id'],
+                $row['name'],
+                $row['description'],
+                (float)$row['price'],
+                (int)$row['faction_id'],
+                (int)$row['stock_quantity']
+            );
+        }
+        return $products;
+    }
+
+    public function getById(int $id): ?Product
+    {
+        $stmt = $this->db->prepare("SELECT * FROM products WHERE id = :id AND is_deleted = 0");
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            return null;
+        }
+
+        return new Product(
+            (int)$row['id'],
+            $row['name'],
+            $row['description'],
+            (float)$row['price'],
+            (int)$row['faction_id'],
+            (int)$row['stock_quantity']
+        );
+    }
 
     public function update(int $id, array $data): bool
     {
@@ -26,7 +66,6 @@ class ProductRepository
                 WHERE id = :id";
 
         $stmt = $this->db->prepare($sql);
-
         $data['id'] = $id;
 
         return $stmt->execute($data);
@@ -36,12 +75,5 @@ class ProductRepository
     {
         $stmt = $this->db->prepare("UPDATE products SET is_deleted = 1 WHERE id = :id");
         return $stmt->execute(['id' => $id]);
-    }
-
-    public function getAllActive(): array
-    {
-        $stmt = $this->db->prepare("SELECT * FROM products WHERE is_deleted = 0");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
