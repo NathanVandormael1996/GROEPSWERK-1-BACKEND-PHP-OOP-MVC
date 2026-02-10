@@ -103,6 +103,23 @@ final class FactionsController
         }
     }
 
+    public function show(int $id): void
+    {
+        // Iedereen mag kijken, dus geen rol-check hier
+        $faction = $this->factionsRepository->findById($id);
+
+        if (!$faction) {
+            header('Location: ' . BASE_PATH . '/factions?error=notfound');
+            exit;
+        }
+
+        $title = "Faction Dossier: " . $faction->getName();
+        ob_start();
+        require __DIR__ . '/../Views/factions/show.php';
+        $content = ob_get_clean();
+        require __DIR__ . '/../Views/layout/public.php';
+    }
+
     public function delete(int $id): void
     {
         if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] !== 4) {
