@@ -1,22 +1,23 @@
 <?php
 declare(strict_types=1);
 
+// Zorg dat regel 1 <?php is zonder spaties ervoor!
 session_start();
 
 require_once __DIR__ . '/../app/autoload.php';
 
-use App\Controllers\OrdersController;
-use App\Controllers\FactionsController;
 use App\Core\Router;
 use App\Controllers\ShopController;
 use App\Controllers\AuthController;
 use App\Controllers\ProductsController;
-use App\Repositories\OrdersRepository;
-use App\Repositories\FactionsRepository;
+use App\Controllers\FactionsController;
+use App\Controllers\OrdersController;
 use App\Repositories\UsersRepository;
 use App\Repositories\ProductsRepository;
 use App\Repositories\FactionsRepository;
+use App\Repositories\OrdersRepository;
 
+// --- CONFIGURATIE ---
 $scriptName = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 define('BASE_PATH', $scriptName === '/' ? '' : $scriptName);
 
@@ -27,15 +28,16 @@ if (BASE_PATH !== '' && strpos($uri, BASE_PATH) === 0) {
 $uri = '/' . ltrim($uri, '/');
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Publieke routes (Login & Shop)
+// --- BEVEILIGING ---
 $publicRoutes = ['/login', '/'];
-$isShopRoute = strpos($uri, '/shop/') === 0; // Alles wat met /shop/ begint is ook ok
+$isShopRoute = strpos($uri, '/shop/') === 0;
 
 if (!isset($_SESSION['user_id']) && !in_array($uri, $publicRoutes) && !$isShopRoute) {
     header('Location: ' . BASE_PATH . '/login');
     exit;
 }
 
+// --- ROUTER ---
 $router = new Router();
 
 // 1. AUTH
@@ -57,7 +59,22 @@ $router->get('/shop/product/{id}', function ($id) {
     (new ShopController(ProductsRepository::make()))->show((int)$id);
 });
 
-// 3. PRODUCTS (ADMIN)
+// 3. CART & ORDERS (KLANT)
+$router->get('/cart', function () {
+    (new App\Controllers\CartController(ProductsRepository::make()))->index();
+});
+$router->post('/cart/add/{id}', function ($id) {
+    (new App\Controllers\CartController(ProductsRepository::make()))->add((int)$id);
+});
+$router->post('/cart/remove/{id}', function ($id) {
+    (new App\Controllers\CartController(ProductsRepository::make()))->remove((int)$id);
+});
+// HIER ZAT DE FOUT: OrdersController heeft TWEE repo's nodig
+$router->post('/orders/create', function () {
+    (new OrdersController(OrdersRepository::make(), ProductsRepository::make()))->store();
+});
+
+// 4. PRODUCTS (ADMIN)
 $router->get('/products', function () {
     (new ProductsController(ProductsRepository::make()))->index();
 });
@@ -80,35 +97,7 @@ $router->post('/products/{id}/delete', function ($id) {
     (new ProductsController(ProductsRepository::make()))->delete((int)$id);
 });
 
-//Orders
-$router->get('/orders', function () {
-    (new OrdersController(OrdersRepository::make()))->index();
-});
-$router->get('/orders/create', function () {
-    (new OrdersController(OrdersRepository::make()))->create();
-});
-$router->post('/orders/store', function () {
-    (new OrdersController(OrdersRepository::make()))->store();
-});
-
-// Show, Edit, Update, Delete
-$router->get('/orders/{id}', function ($id) {
-    (new OrdersController(OrdersRepository::make()))->show((int)$id);
-});
-
-$router->get('/orders/{id}/edit', function ($id) {
-    (new OrdersController(OrdersRepository::make()))->edit((int)$id);
-});
-
-$router->post('/orders/{id}/update', function ($id) {
-    (new OrdersController(OrdersRepository::make()))->update((int)$id);
-});
-
-$router->post('/orders/{id}/delete', function ($id) {
-    (new OrdersController(OrdersRepository::make()))->delete((int)$id);
-});
-
-// --- FACTION ROUTES ---
+// 5. FACTIONS (ADMIN)
 $router->get('/factions', function () {
     (new FactionsController(FactionsRepository::make()))->index();
 });
@@ -131,12 +120,24 @@ $router->post('/factions/{id}/delete', function ($id) {
     (new FactionsController(FactionsRepository::make()))->delete((int)$id);
 });
 
+// 6. ORDERS (ADMIN OVERZICHT - INDIEN NODIG)
+// Let op: ook hier TWEE repo's meegeven als je controller daarom vraagt!
+$router->get('/orders', function () {
+    (new OrdersController(OrdersRepository::make(), ProductsRepository::make()))->index();
+});
+// ... andere order routes indien je die hebt ...
 
+// --- UITVOEREN ---
 try {
     $router->dispatch($uri, $method);
-} catch (Exception $e) {
-    http_response_code(404);
-    echo "<h1>404 - Pagina niet gevonden</h1>";
-    echo "<p>" . $e->getMessage() . "</p>";
-    echo "<a href='" . BASE_PATH . "/'>Terug naar Home</a>";
+} catch (Throwable $e) {
+    // FOUTMELDING VOOR DEBUGGEN (ROOD SCHERM)
+    if (ob_get_level()) ob_clean();
+    echo "<div style='background: #330000; color: #ff9999; padding: 20px; font-family: monospace;'>";
+    echo "<h1>CRITICAL ERROR (500)</h1>";
+    echo "<h2>" . htmlspecialchars($e->getMessage()) . "</h2>";
+    echo "<p><strong>File:</strong> " . $e->getFile() . "</p>";
+    echo "<p><strong>Line:</strong> " . $e->getLine() . "</p>";
+    echo "</div>";
+    exit;
 }
