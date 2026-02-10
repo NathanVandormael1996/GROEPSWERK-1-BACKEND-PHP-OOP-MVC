@@ -17,7 +17,6 @@ class ProductController
     public function index(): void
     {
         $products = $this->productRepository->getAllActive();
-
         require_once __DIR__ . '/../Views/products/index.php';
     }
 
@@ -37,7 +36,7 @@ class ProductController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
-                'name'           => htmlspecialchars($_POST['name']), // Output escaping [cite: 101]
+                'name'           => htmlspecialchars($_POST['name']),
                 'description'    => htmlspecialchars($_POST['description']),
                 'price'          => (float)$_POST['price'],
                 'faction_id'     => (int)$_POST['faction_id'],
@@ -55,8 +54,7 @@ class ProductController
 
     public function delete(int $id): void
     {
-        $success = $this->productRepository->softDelete($id);
-
+        $this->productRepository->softDelete($id);
         header('Location: /products?success=deleted');
         exit;
     }
