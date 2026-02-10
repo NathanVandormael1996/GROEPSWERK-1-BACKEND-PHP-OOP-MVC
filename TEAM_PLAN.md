@@ -28,7 +28,7 @@ Het project maakt gebruik van een relationele databank met de volgende tabelstru
 ## 4. Taakverdeling
 De verantwoordelijkheden zijn verdeeld om een goede samenwerking te garanderen:
 - **Nathan**: Projectopzet
-- **Kirano**: Database
+- **Kirano**: Database, db-connection, maken van de RolesController, -Model, en -Repository.
 
 ## 5. Afspraken rond Samenwerking
 
