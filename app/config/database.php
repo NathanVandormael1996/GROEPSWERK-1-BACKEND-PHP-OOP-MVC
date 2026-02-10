@@ -1,17 +1,10 @@
 <?php
-// database.php
 declare(strict_types=1);
 
-$env = parse_ini_file(__DIR__ . '/.env');
-
-if ($env === false) {
-    die("Kan het .env bestand niet vinden of lezen!");
-}
-
 return [
-    'host'    => $env['DB_HOST'],
-    'dbname'  => $env['DB_NAME'],
-    'user'    => $env['DB_USER'],
-    'pass'    => $env['DB_PASS'],
-    'port'    => $env['DB_PORT'],
+    'host' => '127.0.0.1',
+    'dbname' => 'WH40k_Webshop',
+    'user' => 'root',
+    'pass' => 'root',
+    'charset' => 'utf8mb4',
 ];

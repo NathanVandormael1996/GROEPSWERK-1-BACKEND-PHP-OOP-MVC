@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Voorkom dat de regel wordt uitgevoerd als het een echt bestand of map is
+# (Handig voor je CSS/JS in de assets map)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Stuur al het overige verkeer naar index.php
+RewriteRule ^ index.php [L]
