@@ -10,19 +10,25 @@ final class UsersModel
     private string $email;
     private string $passwordHash;
     private string $createdAt;
+    private ?string $updatedAt;
+    private ?string $deletedAt;
 
     public function __construct(
         ?int $id,
         int $roleId,
         string $email,
         string $passwordHash,
-        string $createdAt
+        string $createdAt,
+        ?string $updatedAt = null,
+        ?string $deletedAt = null
     ) {
         $this->id = $id;
         $this->roleId = $roleId;
         $this->email = $email;
         $this->passwordHash = $passwordHash;
         $this->createdAt = $createdAt;
+        $this->updatedAt = $updatedAt;
+        $this->deletedAt = $deletedAt;
     }
 
     public function getId(): ?int
@@ -54,5 +60,20 @@ final class UsersModel
     public function getCreatedAt(): string
     {
         return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): ?string
+    {
+        return $this->updatedAt;
+    }
+
+    public function getDeletedAt(): ?string
+    {
+        return $this->deletedAt;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->deletedAt !== null;
     }
 }

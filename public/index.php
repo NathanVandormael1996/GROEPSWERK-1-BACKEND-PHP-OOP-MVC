@@ -5,11 +5,14 @@ session_start();
 
 require_once __DIR__ . '/../app/autoload.php';
 
+use App\Controllers\OrdersController;
+use App\Controllers\FactionsController;
 use App\Core\Router;
 use App\Controllers\ShopController;
 use App\Controllers\AuthController;
 use App\Controllers\ProductsController;
-use App\Controllers\FactionsController;
+use App\Repositories\OrdersRepository;
+use App\Repositories\FactionsRepository;
 use App\Repositories\UsersRepository;
 use App\Repositories\ProductsRepository;
 use App\Repositories\FactionsRepository;
@@ -77,7 +80,35 @@ $router->post('/products/{id}/delete', function ($id) {
     (new ProductsController(ProductsRepository::make()))->delete((int)$id);
 });
 
-// 4. FACTIONS (ADMIN)
+//Orders
+$router->get('/orders', function () {
+    (new OrdersController(OrdersRepository::make()))->index();
+});
+$router->get('/orders/create', function () {
+    (new OrdersController(OrdersRepository::make()))->create();
+});
+$router->post('/orders/store', function () {
+    (new OrdersController(OrdersRepository::make()))->store();
+});
+
+// Show, Edit, Update, Delete
+$router->get('/orders/{id}', function ($id) {
+    (new OrdersController(OrdersRepository::make()))->show((int)$id);
+});
+
+$router->get('/orders/{id}/edit', function ($id) {
+    (new OrdersController(OrdersRepository::make()))->edit((int)$id);
+});
+
+$router->post('/orders/{id}/update', function ($id) {
+    (new OrdersController(OrdersRepository::make()))->update((int)$id);
+});
+
+$router->post('/orders/{id}/delete', function ($id) {
+    (new OrdersController(OrdersRepository::make()))->delete((int)$id);
+});
+
+// --- FACTION ROUTES ---
 $router->get('/factions', function () {
     (new FactionsController(FactionsRepository::make()))->index();
 });
