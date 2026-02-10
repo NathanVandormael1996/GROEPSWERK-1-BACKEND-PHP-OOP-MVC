@@ -9,7 +9,7 @@ use PDO;
 
 final class RolesRepository
 {
-    private ?PDO $pdo = null;
+    private PDO $pdo;
 
     public function __construct(PDO $pdo)
     {
@@ -23,32 +23,77 @@ final class RolesRepository
 
     public function findAll(): array
     {
-        $stmt = $this->pdo->query('SELECT * FROM roles ORDER BY id ASC');
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->pdo->query(
+            'SELECT * FROM roles ORDER BY id ASC'
+        );
 
-        $roles = [];
-        foreach ($rows as $row) {
-            $roles[] = $this->mapRowToModel($row);
-        }
-
-        return $roles;
+        return array_map(
+            fn ($row) => $this->mapRowToModel($row),
+            $stmt->fetchAll(PDO::FETCH_ASSOC)
+        );
     }
 
     public function findById(int $id): ?RolesModel
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM roles WHERE id = :id');
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM roles WHERE id = :id'
+        );
+
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $row ? $this->mapRowToModel($row) : null;
     }
 
+    public function create(RolesModel $role): void
+    {
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO roles (name, description, created_at)
+             VALUES (:name, :description, NOW())'
+        );
+
+        $stmt->execute([
+            'name' => $role->name,
+            'description' => $role->description,
+        ]);
+    }
+
+    public function update(RolesModel $role): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE roles
+             SET name = :name,
+                 description = :description,
+                 updated_at = NOW()
+             WHERE id = :id'
+        );
+
+        $stmt->execute([
+            'id' => $role->id,
+            'name' => $role->name,
+            'description' => $role->description,
+        ]);
+    }
+
+    public function delete(int $id): void
+    {
+        $stmt = $this->pdo->prepare(
+            'DELETE FROM roles WHERE id = :id'
+        );
+
+        $stmt->execute(['id' => $id]);
+    }
+
+
     private function mapRowToModel(array $row): RolesModel
     {
         return new RolesModel(
-            (int)$row['id'],
+            (int) $row['id'],
             $row['name'],
-            $row['created_at'] ?? null,
+            $row['description'],
+            $row['created_at'],
+            $row['updated_at'] ?? null,
+            $row['deleted_at'] ?? null
         );
     }
 }
