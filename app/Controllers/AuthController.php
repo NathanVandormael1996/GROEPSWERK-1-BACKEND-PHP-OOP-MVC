@@ -16,11 +16,20 @@ final class AuthController
 
     public function showLogin(): void
     {
-        $title = "Inquisition Access Required";
-        ob_start();
+        if (isset($_SESSION['user_id'])) {
+            if ($_SESSION['role_id'] >= 3) {
+                header('Location: ' . BASE_PATH . '/products');
+            } else {
+                header('Location: ' . BASE_PATH . '/');
+            }
+            exit;
+        }
+
+        $title = "Inquisition Login";
+
+        require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/auth/login.php';
-        $content = ob_get_clean();
-        require __DIR__ . '/../Views/layout/public.php';
+        require __DIR__ . '/../Views/layout/footer.php';
     }
 
     public function login(): void
@@ -31,17 +40,27 @@ final class AuthController
         $user = $this->usersRepository->findByEmail($email);
 
         if ($user && password_verify($password, $user->getPasswordHash())) {
+
             $_SESSION['user_id'] = $user->getId();
+            $_SESSION['username'] = $user->getUsername();
             $_SESSION['role_id'] = $user->getRoleId();
 
-            $roleMap = [1 => 'Customer', 2 => 'Staff', 3 => 'Manager', 4 => 'Inquisitor'];
-            $_SESSION['role'] = $roleMap[$user->getRoleId()] ?? 'Citizen';
-
-            header('Location: /products');
+            if ($user->getRoleId() >= 3) {
+                header('Location: ' . BASE_PATH . '/products');
+            } else {
+                header('Location: ' . BASE_PATH . '/');
+            }
             exit;
         }
 
-        header('Location: /login?error=invalid');
+        header('Location: ' . BASE_PATH . '/login?error=invalid');
+        exit;
+    }
+
+    public function logout(): void
+    {
+        session_destroy();
+        header('Location: ' . BASE_PATH . '/login');
         exit;
     }
 }

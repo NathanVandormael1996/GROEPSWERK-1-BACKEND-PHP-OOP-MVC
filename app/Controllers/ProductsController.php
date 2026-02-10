@@ -15,50 +15,56 @@ final class ProductsController
         $this->productsRepository = $productsRepository;
     }
 
+    private function ensureAdmin(): void
+    {
+        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
+            header('Location: ' . BASE_PATH . '/login');
+            exit;
+        }
+    }
+
     public function index(): void
     {
+        $this->ensureAdmin();
+
         $products = $this->productsRepository->findAll();
-        $title = "Armory Inventory";
-        ob_start();
+        $title = "Armory Inventory (Admin)";
+
+        require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/products/index.php';
-        $content = ob_get_clean();
-        require __DIR__ . '/../Views/layout/public.php';
+        require __DIR__ . '/../Views/layout/footer.php';
     }
 
     public function show(int $id): void
     {
+        $this->ensureAdmin();
+
         $product = $this->productsRepository->findById($id);
         if (!$product) {
-            header('Location: ' . BASE_PATH . '/products?error=notfound');
+            header('Location: ' . BASE_PATH . '/products');
             exit;
         }
 
-        $title = $product->getName();
-        ob_start();
+        $title = "Admin Detail: " . $product->getName();
+
+        require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/products/show.php';
-        $content = ob_get_clean();
-        require __DIR__ . '/../Views/layout/public.php';
+        require __DIR__ . '/../Views/layout/footer.php';
     }
 
     public function create(): void
     {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
-            header('Location: ' . BASE_PATH . '/products?error=unauthorized');
-            exit;
-        }
+        $this->ensureAdmin();
         $title = "Forge New Unit";
-        ob_start();
+
+        require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/products/create.php';
-        $content = ob_get_clean();
-        require __DIR__ . '/../Views/layout/public.php';
+        require __DIR__ . '/../Views/layout/footer.php';
     }
 
     public function store(): void
     {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
-            header('Location: ' . BASE_PATH . '/products?error=unauthorized');
-            exit;
-        }
+        $this->ensureAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $product = new ProductsModel(
@@ -82,30 +88,23 @@ final class ProductsController
 
     public function edit(int $id): void
     {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
-            header('Location: ' . BASE_PATH . '/products?error=unauthorized');
-            exit;
-        }
+        $this->ensureAdmin();
 
         $product = $this->productsRepository->findById($id);
         if (!$product) {
-            header('Location: ' . BASE_PATH . '/products?error=notfound');
+            header('Location: ' . BASE_PATH . '/products');
             exit;
         }
 
         $title = "Modify Unit";
-        ob_start();
+        require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/products/edit.php';
-        $content = ob_get_clean();
-        require __DIR__ . '/../Views/layout/public.php';
+        require __DIR__ . '/../Views/layout/footer.php';
     }
 
     public function update(int $id): void
     {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
-            header('Location: ' . BASE_PATH . '/products?error=unauthorized');
-            exit;
-        }
+        $this->ensureAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $product = new ProductsModel(

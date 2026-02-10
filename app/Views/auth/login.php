@@ -14,7 +14,7 @@ declare(strict_types=1);
             </div>
         <?php endif; ?>
 
-        <form action="/login" method="POST" class="space-y-6">
+        <form action="<?= BASE_PATH ?>/login" method="POST" class="space-y-6">
             <div class="space-y-2">
                 <label class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Data-Slate ID (Email)</label>
                 <input type="email" name="email" placeholder="inquisitor@imperium.com"
