@@ -20,14 +20,14 @@ final class UsersRepository
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO users (role_id, email, password_hash, created_at)
-             VALUES (:role_id, :email, :password_hash, :created_at)'
+             VALUES (:role_id, :email, :password_hash, NOW())'
         );
 
         $stmt->execute([
-            'role_id'       => $user->roleId,
-            'email'         => $user->email,
-            'password_hash' => $user->passwordHash,
-            'created_at'    => $user->createdAt,
+            'role_id'       => $user->getRoleId(),
+            'email'         => $user->getEmail(),
+            'password_hash' => $user->getPasswordHash(),
+            'created_at'    => $user->getCreatedAt(),
         ]);
 
         return (int) $this->pdo->lastInsertId();
@@ -65,10 +65,10 @@ final class UsersRepository
         );
 
         return $stmt->execute([
-            'id'            => $user->id,
-            'role_id'       => $user->roleId,
-            'email'         => $user->email,
-            'password_hash' => $user->passwordHash,
+            'id'            => $user->getId(),
+            'role_id'       => $user->getRoleId(),
+            'email'         => $user->getEmail(),
+            'password_hash' => $user->getPasswordHash(),
         ]);
     }
 }
