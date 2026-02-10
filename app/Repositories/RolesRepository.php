@@ -10,9 +10,6 @@ final class RolesRepository
 {
     private ?PDO $pdo = null;
 
-    /**
-     * Maakt de database connectie
-     */
     private function make(): void
     {
         if ($this->pdo !== null) {
@@ -32,25 +29,6 @@ final class RolesRepository
         );
     }
 
-    /** CREATE */
-    public function create(RolesModel $role): int
-    {
-        $this->make();
-
-        $stmt = $this->pdo->prepare(
-            'INSERT INTO roles (name, description)
-             VALUES (:name, :description)'
-        );
-
-        $stmt->execute([
-            'name'        => $role->name,
-            'description' => $role->description,
-        ]);
-
-        return (int) $this->pdo->lastInsertId();
-    }
-
-    /** READ ALL */
     public function findAll(): array
     {
         $this->make();
@@ -70,23 +48,5 @@ final class RolesRepository
         }
 
         return $roles;
-    }
-
-    /** UPDATE */
-    public function update(RolesModel $role): bool
-    {
-        $this->make();
-
-        $stmt = $this->pdo->prepare(
-            'UPDATE roles
-             SET name = :name, description = :description
-             WHERE id = :id'
-        );
-
-        return $stmt->execute([
-            'id'          => $role->id,
-            'name'        => $role->name,
-            'description' => $role->description,
-        ]);
     }
 }
