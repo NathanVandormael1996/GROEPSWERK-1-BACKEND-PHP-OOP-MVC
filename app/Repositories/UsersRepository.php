@@ -10,29 +10,13 @@ final class UsersRepository
 {
     private ?PDO $pdo = null;
 
-    private function make(): void
+    public static function make(): self
     {
-        if ($this->pdo !== null) {
-            return;
-        }
-
-        $config = require __DIR__ . '/../config/database.php';
-
-        $this->pdo = new PDO(
-            "mysql:host={$config['host']};dbname={$config['dbname']};port={$config['port']};charset=utf8mb4",
-            $config['user'],
-            $config['pass'],
-            [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ]
-        );
+        return new self(Database::getConnection());
     }
 
     public function create(UsersModel $user): int
     {
-        $this->make();
-
         $stmt = $this->pdo->prepare(
             'INSERT INTO users (role_id, email, password_hash, created_at)
              VALUES (:role_id, :email, :password_hash, :created_at)'
@@ -50,8 +34,6 @@ final class UsersRepository
 
     public function findAll(): array
     {
-        $this->make();
-
         $stmt = $this->pdo->query(
             'SELECT id, role_id, email, password_hash, created_at FROM users'
         );
@@ -73,8 +55,6 @@ final class UsersRepository
 
     public function update(UsersModel $user): bool
     {
-        $this->make();
-
         $stmt = $this->pdo->prepare(
             'UPDATE users
              SET role_id = :role_id,
