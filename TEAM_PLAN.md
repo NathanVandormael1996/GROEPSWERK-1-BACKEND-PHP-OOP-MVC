@@ -12,9 +12,18 @@ Dit project bevat drie entiteiten, elk met een eigen model en repository:
 
 ## 3. Globale Databankstructuur
 Het project maakt gebruik van een relationele databank met de volgende tabelstructuur:
-- **products**: `id` (PK), `name`, `description`, `price`, `faction_id` (FK), `stock_quantity`.
-- **factions**: `id` (PK), `name`, `description`.
-- **users**: `id` (PK), `email` (unique), `password_hash`.
+### Users & Auth
+- **users**: `id` (PK), `email`, `password_hash`, `created_at`
+- **roles**: `id` (PK), `name`, `description`
+- **user_roles**: `user_id` (FK), `role_id` (FK)
+
+### Products
+- **factions**: `id` (PK), `name`, `description`
+- **products**: `id` (PK), `faction_id` (FK), `name`, `description`, `price`, `image_url`, `stock_quantity`, `created_at`, `updated_at`, `deleted_at`
+
+### Sales & Orders
+- **orders**: `id` (PK), `user_id` (FK), `total_price`, `created_at`
+- **order_products**: `id` (PK), `order_id` (FK), `product_id` (FK), `quantity`, `price_at_purchase`
 
 ## 4. Taakverdeling
 De verantwoordelijkheden zijn verdeeld om een goede samenwerking te garanderen:
