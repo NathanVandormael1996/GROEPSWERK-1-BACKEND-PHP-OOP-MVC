@@ -37,9 +37,18 @@ declare(strict_types=1);
 
             <div class="grid grid-cols-2 gap-8">
                 <div class="space-y-2">
-                    <label class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Faction ID</label>
-                    <input type="number" name="faction_id" placeholder="bv. 1"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-lg p-4 text-white focus:ring-2 focus:ring-purple-600 outline-none" required>
+                    <label class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">
+                        Faction
+                    </label>
+
+                    <select name="faction_name" required
+                            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-4 text-white focus:ring-2 focus:ring-purple-600 outline-none transition-all">
+                        <?php foreach ($factions as $faction): ?>
+                            <option value="<?= htmlspecialchars($faction->getName()) ?>">
+                                <?= htmlspecialchars($faction->getName()) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="space-y-2">
                     <label class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Image URL</label>

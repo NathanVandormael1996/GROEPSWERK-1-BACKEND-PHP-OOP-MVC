@@ -1,3 +1,6 @@
+<?php
+declare(strict_types=1);
+?>
 <section class="max-w-3xl mx-auto px-6 py-14">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 shadow-xl">
         <div class="mb-8">

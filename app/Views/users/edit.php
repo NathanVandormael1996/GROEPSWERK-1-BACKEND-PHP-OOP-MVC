@@ -1,3 +1,6 @@
+<?php
+declare(strict_types=1);
+?>
 <section class="max-w-xl mx-auto px-6 py-14">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 shadow-xl">
         <h1 class="text-3xl font-black text-purple-500 uppercase italic mb-10">
@@ -29,10 +32,14 @@
                 <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">
                     Role
                 </label>
+
                 <select name="role_name" required
                         class="w-full bg-slate-950 border border-slate-700 rounded-lg p-4 text-white">
-                    <option value="klant">Klant</option>
-                    <option value="admin">Admin</option>
+                    <?php foreach ($roles as $role): ?>
+                        <option value="<?= htmlspecialchars($role->getName()) ?>">
+                            <?= ucfirst(htmlspecialchars($role->getName())) ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 

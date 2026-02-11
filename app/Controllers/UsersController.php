@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Repositories\UsersRepository;
+use App\Repositories\RolesRepository;
 
 final class UsersController
 {
@@ -55,6 +56,9 @@ final class UsersController
     {
         $this->ensureAdmin();
 
+        $rolesRepository = RolesRepository::make();
+        $roles = $rolesRepository->findAll();
+
         $title = "Create User";
 
         require __DIR__ . '/../Views/layout/header.php';
@@ -62,13 +66,14 @@ final class UsersController
         require __DIR__ . '/../Views/layout/footer.php';
     }
 
+
     public function store(): void
     {
         $this->ensureAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->usersRepository->create(
-                $_POST['role_name'],                      // <-- rolename
+                $_POST['role_name'],
                 htmlspecialchars($_POST['email']),
                 password_hash($_POST['password'], PASSWORD_DEFAULT)
             );
@@ -88,12 +93,16 @@ final class UsersController
             exit;
         }
 
+        $rolesRepository = RolesRepository::make();
+        $roles = $rolesRepository->findAll();
+
         $title = "Edit User";
 
         require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/users/edit.php';
         require __DIR__ . '/../Views/layout/footer.php';
     }
+
 
     public function update(int $id): void
     {
