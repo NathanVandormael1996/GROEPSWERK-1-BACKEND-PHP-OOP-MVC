@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Models\UsersModel;
 use App\Repositories\UsersRepository;
 
 final class UsersController
@@ -15,20 +14,30 @@ final class UsersController
         $this->usersRepository = $usersRepository;
     }
 
+    private function ensureAdmin(): void
+    {
+        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
+            header('Location: ' . BASE_PATH . '/login');
+            exit;
+        }
+    }
+
     public function index(): void
     {
+        $this->ensureAdmin();
+
         $users = $this->usersRepository->findAll();
         $title = "Users Overview";
 
-        ob_start();
+        require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/users/index.php';
-        $content = ob_get_clean();
-
-        require __DIR__ . '/../Views/layout/public.php';
+        require __DIR__ . '/../Views/layout/footer.php';
     }
 
     public function show(int $id): void
     {
+        $this->ensureAdmin();
+
         $user = $this->usersRepository->findById($id);
         if (!$user) {
             header('Location: ' . BASE_PATH . '/users?error=notfound');
@@ -37,51 +46,31 @@ final class UsersController
 
         $title = "User #" . $user->getId();
 
-        ob_start();
+        require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/users/show.php';
-        $content = ob_get_clean();
-
-        require __DIR__ . '/../Views/layout/public.php';
+        require __DIR__ . '/../Views/layout/footer.php';
     }
 
     public function create(): void
     {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
-            header('Location: ' . BASE_PATH . '/users?error=unauthorized');
-            exit;
-        }
+        $this->ensureAdmin();
 
         $title = "Create User";
 
-        ob_start();
+        require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/users/create.php';
-        $content = ob_get_clean();
-
-        require __DIR__ . '/../Views/layout/public.php';
+        require __DIR__ . '/../Views/layout/footer.php';
     }
 
     public function store(): void
     {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
-            header('Location: ' . BASE_PATH . '/users?error=unauthorized');
-            exit;
-        }
+        $this->ensureAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $user = new UsersModel(
-                0, // dummy id
-                (int) $_POST['role_id'],
-                $_POST['email'],
-                password_hash($_POST['password'], PASSWORD_DEFAULT),
-                date('Y-m-d H:i:s'),
-                null,
-                null
-            );
-
             $this->usersRepository->create(
-                $user->getRoleId(),
-                $user->getEmail(),
-                $user->getPasswordHash()
+                $_POST['role_name'],                      // <-- rolename
+                htmlspecialchars($_POST['email']),
+                password_hash($_POST['password'], PASSWORD_DEFAULT)
             );
 
             header('Location: ' . BASE_PATH . '/users?success=created');
@@ -91,10 +80,7 @@ final class UsersController
 
     public function edit(int $id): void
     {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
-            header('Location: ' . BASE_PATH . '/users?error=unauthorized');
-            exit;
-        }
+        $this->ensureAdmin();
 
         $user = $this->usersRepository->findById($id);
         if (!$user) {
@@ -104,34 +90,28 @@ final class UsersController
 
         $title = "Edit User";
 
-        ob_start();
+        require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/users/edit.php';
-        $content = ob_get_clean();
-
-        require __DIR__ . '/../Views/layout/public.php';
+        require __DIR__ . '/../Views/layout/footer.php';
     }
 
     public function update(int $id): void
     {
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) {
-            header('Location: ' . BASE_PATH . '/users?error=unauthorized');
-            exit;
-        }
+        $this->ensureAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $user = new UsersModel(
-                $id,
-                (int) $_POST['role_id'],
-                $_POST['email'],
-                !empty($_POST['password'])
-                    ? password_hash($_POST['password'], PASSWORD_DEFAULT)
-                    : $this->usersRepository->findById($id)->getPasswordHash(),
-                '',
-                date('Y-m-d H:i:s'),
-                null
-            );
+            $existingUser = $this->usersRepository->findById($id);
 
-            $this->usersRepository->update($user);
+            $passwordHash = !empty($_POST['password'])
+                ? password_hash($_POST['password'], PASSWORD_DEFAULT)
+                : $existingUser->getPasswordHash();
+
+            $this->usersRepository->update(
+                $id,
+                $_POST['role_name'],                     // <-- rolename
+                htmlspecialchars($_POST['email']),
+                $passwordHash
+            );
 
             header('Location: ' . BASE_PATH . '/users?success=updated');
             exit;

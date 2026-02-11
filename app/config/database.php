@@ -5,6 +5,6 @@ return [
     'host' => '127.0.0.1',
     'dbname' => 'WH40k_Webshop',
     'user' => 'root',
-    'pass' => 'root',
+    'pass' => '',
     'charset' => 'utf8mb4',
 ];

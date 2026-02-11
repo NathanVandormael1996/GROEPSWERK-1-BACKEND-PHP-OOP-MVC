@@ -25,14 +25,31 @@ if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] < 3) return;
             <span>⚔️</span> Alliances (Factions)
         </a>
 
-        <?php if ($_SESSION['role_id'] === 4): // Alleen Admins ?>
-            <div class="text-[10px] font-black text-slate-600 uppercase tracking-widest px-4 mb-2 mt-6">Administration</div>
+        <?php if (in_array($_SESSION['role_id'], [2, 3, 4])): ?>
+            <div class="text-[10px] font-black text-slate-600 uppercase tracking-widest px-4 mb-2 mt-6">
+                Administration
+            </div>
 
-            <a href="<?= BASE_PATH ?>/users"
+            <a href="<?= BASE_PATH ?>/orders"
                class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-400 hover:text-white hover:bg-slate-900 rounded-lg transition-all">
-                <span>👥</span> Personnel (Users)
+                <span>💀</span>
+                Tactical Logistics
             </a>
+
+            <?php if ($_SESSION['role_id'] === 4): // Alleen Admins ?>
+                <a href="<?= BASE_PATH ?>/users"
+                   class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-400 hover:text-white hover:bg-slate-900 rounded-lg transition-all">
+                    <span>🪦</span> Personnel (Users)
+                </a>
+                <a href="<?= BASE_PATH ?>/roles"
+                   class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-400 hover:text-white hover:bg-slate-900 rounded-lg transition-all">
+                    <span>🔱</span> Personnel (Roles)
+                </a>
+            <?php endif; ?>
         <?php endif; ?>
+
+
+
     </nav>
 
     <div class="p-4 border-t border-slate-800 bg-slate-900/50">
