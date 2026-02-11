@@ -12,13 +12,6 @@ declare(strict_types=1);
                 Imperial Transaction Log
             </p>
         </div>
-
-        <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] >= 3): ?>
-            <a href="<?= BASE_PATH ?>/orders/create"
-               class="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black py-3 px-6 rounded uppercase tracking-widest transition-all">
-                Add Order
-            </a>
-        <?php endif; ?>
     </div>
 
     <?php if (isset($_GET['success'])): ?>
@@ -62,13 +55,6 @@ declare(strict_types=1);
                            class="bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black py-3 text-center rounded uppercase tracking-widest transition-colors">
                             View Order
                         </a>
-
-                        <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] >= 3): ?>
-                            <a href="orders/<?= $order->getId() ?>/edit"
-                               class="bg-purple-900/30 hover:bg-purple-600 text-purple-400 hover:text-white text-[10px] font-black py-3 text-center rounded uppercase tracking-widest transition-all border border-purple-900">
-                                Modify
-                            </a>
-                        <?php endif; ?>
                     </div>
 
                     <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] === 4): ?>
