@@ -24,7 +24,12 @@ final class UsersRepository
     public function findById(int $id): ?UsersModel
     {
         $stmt = $this->pdo->prepare(
-            'SELECT * FROM users WHERE id = :id'
+            'SELECT 
+                u.*,
+                r.name AS role_name
+             FROM users u
+             JOIN roles r ON u.role_id = r.id
+             WHERE u.id = :id'
         );
 
         $stmt->execute(['id' => $id]);
@@ -35,7 +40,13 @@ final class UsersRepository
 
     public function findAll(): array
     {
-        $stmt = $this->pdo->query('SELECT * FROM users');
+        $stmt = $this->pdo->query(
+            'SELECT 
+                u.*,
+                r.name AS role_name
+             FROM users u
+             JOIN roles r ON u.role_id = r.id'
+        );
 
         return array_map(
             fn ($row) => $this->mapRowToModel($row),
@@ -46,7 +57,13 @@ final class UsersRepository
     public function findByEmail(string $email): ?UsersModel
     {
         $stmt = $this->pdo->prepare(
-            'SELECT * FROM users WHERE email = :email LIMIT 1'
+            'SELECT 
+                u.*,
+                r.name AS role_name
+             FROM users u
+             JOIN roles r ON u.role_id = r.id
+             WHERE u.email = :email
+             LIMIT 1'
         );
 
         $stmt->execute(['email' => $email]);
@@ -55,42 +72,51 @@ final class UsersRepository
         return $row ? $this->mapRowToModel($row) : null;
     }
 
-
     public function create(
-        int $roleId,
+        string $roleName,
         string $email,
         string $passwordHash
     ): UsersModel {
         $stmt = $this->pdo->prepare(
             'INSERT INTO users (role_id, email, password_hash, created_at)
-             VALUES (:role_id, :email, :password_hash, NOW())'
+             VALUES (
+                (SELECT id FROM roles WHERE name = :role_name),
+                :email,
+                :password_hash,
+                NOW()
+             )'
         );
 
         $stmt->execute([
-            'role_id' => $roleId,
-            'email' => $email,
+            'role_name'     => $roleName,
+            'email'         => $email,
             'password_hash' => $passwordHash,
         ]);
 
         return $this->findById((int) $this->pdo->lastInsertId());
     }
 
-    public function update(UsersModel $user): void
-    {
+    public function update(
+        int $id,
+        string $roleName,
+        string $email,
+        string $passwordHash
+    ): void {
         $stmt = $this->pdo->prepare(
             'UPDATE users
-             SET role_id = :role_id,
-                 email = :email,
-                 password_hash = :password_hash,
-                 updated_at = NOW()
+             SET
+                role_id = (SELECT id FROM roles WHERE name = :role_name),
+                email = :email,
+                password_hash = :password_hash,
+                updated_at = NOW()
              WHERE id = :id'
         );
 
         $stmt->execute([
-            'id' => $user->getId(),
-            'role_id' => $user->getRoleId(),
-            'email' => $user->getEmail(),
-            'password_hash' => $user->getPasswordHash(),
+            'id'            => $id,
+            'role_name'     => $roleName,
+            'email'         => $email,
+            'password_hash' => $passwordHash,
         ]);
     }
 
@@ -102,11 +128,13 @@ final class UsersRepository
 
         $stmt->execute(['id' => $id]);
     }
+
     private function mapRowToModel(array $row): UsersModel
     {
         return new UsersModel(
             (int) $row['id'],
             (int) $row['role_id'],
+            $row['role_name'],
             $row['email'],
             $row['password_hash'],
             $row['created_at'],

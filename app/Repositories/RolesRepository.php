@@ -28,7 +28,7 @@ final class RolesRepository
         );
 
         return array_map(
-            fn ($row) => $this->mapRowToModel($row),
+            fn (array $row) => $this->mapRowToModel($row),
             $stmt->fetchAll(PDO::FETCH_ASSOC)
         );
     }
@@ -53,8 +53,8 @@ final class RolesRepository
         );
 
         $stmt->execute([
-            'name' => $role->name,
-            'description' => $role->description,
+            'name' => $role->getName(),
+            'description' => $role->getDescription(),
         ]);
     }
 
@@ -69,9 +69,9 @@ final class RolesRepository
         );
 
         $stmt->execute([
-            'id' => $role->id,
-            'name' => $role->name,
-            'description' => $role->description,
+            'id' => $role->getId(),
+            'name' => $role->getName(),
+            'description' => $role->getDescription(),
         ]);
     }
 
@@ -83,7 +83,6 @@ final class RolesRepository
 
         $stmt->execute(['id' => $id]);
     }
-
 
     private function mapRowToModel(array $row): RolesModel
     {

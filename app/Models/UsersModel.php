@@ -7,6 +7,7 @@ final class UsersModel
 {
     private ?int $id;
     private int $roleId;
+    private string $roleName;
     private string $email;
     private string $passwordHash;
     private string $createdAt;
@@ -16,6 +17,7 @@ final class UsersModel
     public function __construct(
         ?int $id,
         int $roleId,
+        string $roleName,
         string $email,
         string $passwordHash,
         string $createdAt,
@@ -24,6 +26,7 @@ final class UsersModel
     ) {
         $this->id = $id;
         $this->roleId = $roleId;
+        $this->roleName = $roleName;
         $this->email = $email;
         $this->passwordHash = $passwordHash;
         $this->createdAt = $createdAt;
@@ -45,6 +48,11 @@ final class UsersModel
     public function getRoleId(): int
     {
         return $this->roleId;
+    }
+
+    public function getRoleName(): string
+    {
+        return $this->roleName;
     }
 
     public function getEmail(): string

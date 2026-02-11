@@ -10,12 +10,15 @@ use App\Controllers\ShopController;
 use App\Controllers\AuthController;
 use App\Controllers\ProductsController;
 use App\Controllers\FactionsController;
+use App\Controllers\UsersController;
+use App\Controllers\RolesController;
 use App\Controllers\OrdersController;
 use App\Controllers\CartController;
-use App\Repositories\UsersRepository;
 use App\Repositories\ProductsRepository;
 use App\Repositories\FactionsRepository;
 use App\Repositories\OrdersRepository;
+use App\Repositories\UsersRepository;
+use App\Repositories\RolesRepository;
 
 $scriptName = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 define('BASE_PATH', $scriptName === '/' ? '' : $scriptName);
@@ -126,6 +129,53 @@ $router->post('/factions/{id}/update', function ($id) {
 });
 $router->post('/factions/{id}/delete', function ($id) {
     (new FactionsController(FactionsRepository::make()))->delete((int)$id);
+});
+
+//Users
+$router->get('/users', function () {
+    (new UsersController(UsersRepository::make()))->index();
+});
+$router->get('/users/create', function () {
+    (new UsersController(UsersRepository::make()))->create();
+});
+$router->post('/users/store', function () {
+    (new UsersController(UsersRepository::make()))->store();
+});
+$router->get('/users/{id}', function ($id) {
+    (new UsersController(UsersRepository::make()))->show((int)$id);
+});
+$router->get('/users/{id}/edit', function ($id) {
+    (new UsersController(UsersRepository::make()))->edit((int)$id);
+});
+$router->post('/users/{id}/update', function ($id) {
+    (new UsersController(UsersRepository::make()))->update((int)$id);
+});
+$router->post('/users/{id}/delete', function ($id) {
+    (new UsersController(UsersRepository::make()))->delete((int)$id);
+});
+
+//Roles
+//Users
+$router->get('/roles', function () {
+    (new RolesController(RolesRepository::make()))->index();
+});
+$router->get('/roles/create', function () {
+    (new RolesController(RolesRepository::make()))->create();
+});
+$router->post('/roles/store', function () {
+    (new RolesController(RolesRepository::make()))->store();
+});
+$router->get('/roles/{id}', function ($id) {
+    (new RolesController(RolesRepository::make()))->show((int)$id);
+});
+$router->get('/roles/{id}/edit', function ($id) {
+    (new RolesController(RolesRepository::make()))->edit((int)$id);
+});
+$router->post('/roles/{id}/update', function ($id) {
+    (new RolesController(RolesRepository::make()))->update((int)$id);
+});
+$router->post('/roles/{id}/delete', function ($id) {
+    (new RolesController(RolesRepository::make()))->delete((int)$id);
 });
 
 
