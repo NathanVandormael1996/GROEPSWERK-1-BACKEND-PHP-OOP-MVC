@@ -11,6 +11,7 @@ use App\Controllers\AuthController;
 use App\Controllers\ProductsController;
 use App\Controllers\FactionsController;
 use App\Controllers\OrdersController;
+use App\Controllers\CartController;
 use App\Repositories\UsersRepository;
 use App\Repositories\ProductsRepository;
 use App\Repositories\FactionsRepository;
@@ -36,7 +37,7 @@ if (!isset($_SESSION['user_id']) && !in_array($uri, $publicRoutes) && !$isShopRo
 
 $router = new Router();
 
-// 1. AUTH
+// Auth
 $router->get('/login', function () {
     (new AuthController(UsersRepository::make()))->showLogin();
 });
@@ -47,7 +48,7 @@ $router->post('/logout', function () {
     (new AuthController(UsersRepository::make()))->logout();
 });
 
-// 2. SHOP (KLANT)
+// Shop
 $router->get('/', function () {
     (new ShopController(ProductsRepository::make()))->index();
 });
@@ -55,7 +56,33 @@ $router->get('/shop/product/{id}', function ($id) {
     (new ShopController(ProductsRepository::make()))->show((int)$id);
 });
 
-// 4. PRODUCTS (ADMIN)
+// Cart
+$router->get('/cart', function () {
+    (new CartController(ProductsRepository::make()))->index();
+});
+$router->post('/cart/add/{id}', function ($id) {
+    (new CartController(ProductsRepository::make()))->add((int)$id);
+});
+$router->post('/cart/remove/{id}', function ($id) {
+    (new CartController(ProductsRepository::make()))->remove((int)$id);
+});
+
+$router->post('/orders/create', function () {
+    (new OrdersController(OrdersRepository::make(), ProductsRepository::make()))->store();
+});
+
+// 4. Orders
+$router->get('/orders', function () {
+    (new OrdersController(OrdersRepository::make(), ProductsRepository::make()))->index();
+});
+$router->get('/orders/{id}', function ($id) {
+    (new OrdersController(OrdersRepository::make(), ProductsRepository::make()))->show((int)$id);
+});
+$router->post('/orders/{id}/delete', function ($id) {
+    (new OrdersController(OrdersRepository::make(), ProductsRepository::make()))->delete((int)$id);
+});
+
+// Products
 $router->get('/products', function () {
     (new ProductsController(ProductsRepository::make()))->index();
 });
@@ -78,7 +105,7 @@ $router->post('/products/{id}/delete', function ($id) {
     (new ProductsController(ProductsRepository::make()))->delete((int)$id);
 });
 
-// 5. FACTIONS (ADMIN)
+// Factions
 $router->get('/factions', function () {
     (new FactionsController(FactionsRepository::make()))->index();
 });
@@ -101,28 +128,6 @@ $router->post('/factions/{id}/delete', function ($id) {
     (new FactionsController(FactionsRepository::make()))->delete((int)$id);
 });
 
-// 6. ORDERS (ADMIN)
-$router->get('/orders', function () {
-    (new OrdersController(OrdersRepository::make()))->index();
-});
-$router->get('/orders/create', function () {
-    (new OrdersController(OrdersRepository::make()))->create();
-});
-$router->post('/orders/store', function () {
-    (new OrdersController(OrdersRepository::make()))->store();
-});
-$router->get('/orders/{id}', function ($id) {
-    (new OrdersController(OrdersRepository::make()))->show((int)$id);
-});
-$router->get('/orders/{id}/edit', function ($id) {
-    (new OrdersController(OrdersRepository::make()))->edit((int)$id);
-});
-$router->post('/orders/{id}/update', function ($id) {
-    (new OrdersController(OrdersRepository::make()))->update((int)$id);
-});
-$router->post('/orders/{id}/delete', function ($id) {
-    (new OrdersController(OrdersRepository::make()))->delete((int)$id);
-});
 
 try {
     $router->dispatch($uri, $method);
