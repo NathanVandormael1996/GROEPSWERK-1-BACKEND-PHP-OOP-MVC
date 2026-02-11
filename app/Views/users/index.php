@@ -1,3 +1,6 @@
+<?php
+declare(strict_types=1);
+?>
 <section class="max-w-7xl mx-auto px-6 py-14">
     <div class="flex items-end justify-between mb-10">
         <div>

@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Models\ProductsModel;
 use App\Repositories\ProductsRepository;
+use App\Repositories\FactionsRepository;
 
 final class ProductsController
 {
@@ -55,6 +55,10 @@ final class ProductsController
     public function create(): void
     {
         $this->ensureAdmin();
+
+        $factionsRepository = FactionsRepository::make();
+        $factions = $factionsRepository->findAll();
+
         $title = "Forge New Unit";
 
         require __DIR__ . '/../Views/layout/header.php';
@@ -67,20 +71,15 @@ final class ProductsController
         $this->ensureAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $product = new ProductsModel(
-                null,
-                (int)$_POST['faction_id'],
+            $this->productsRepository->create(
+                $_POST['faction_name'],                 // 👈 naam, geen ID
                 htmlspecialchars($_POST['name']),
                 htmlspecialchars($_POST['description']),
-                (float)$_POST['price'],
+                (float) $_POST['price'],
                 $_POST['image_url'] ?? '',
-                (int)$_POST['stock_quantity'],
-                date('Y-m-d H:i:s'),
-                null,
-                null
+                (int) $_POST['stock_quantity']
             );
 
-            $this->productsRepository->create($product);
             header('Location: ' . BASE_PATH . '/products?success=created');
             exit;
         }
@@ -96,7 +95,11 @@ final class ProductsController
             exit;
         }
 
+        $factionsRepository = FactionsRepository::make();
+        $factions = $factionsRepository->findAll();
+
         $title = "Modify Unit";
+
         require __DIR__ . '/../Views/layout/header.php';
         require __DIR__ . '/../Views/products/edit.php';
         require __DIR__ . '/../Views/layout/footer.php';
@@ -107,20 +110,15 @@ final class ProductsController
         $this->ensureAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $product = new ProductsModel(
+            $this->productsRepository->update(
                 $id,
-                (int)$_POST['faction_id'],
+                $_POST['faction_name'],                 // 👈 naam, geen ID
                 htmlspecialchars($_POST['name']),
                 htmlspecialchars($_POST['description']),
-                (float)$_POST['price'],
+                (float) $_POST['price'],
                 $_POST['image_url'] ?? '',
-                (int)$_POST['stock_quantity'],
-                '',
-                date('Y-m-d H:i:s'),
-                null
+                (int) $_POST['stock_quantity']
             );
-
-            $this->productsRepository->update($product);
 
             header('Location: ' . BASE_PATH . '/products?success=updated');
             exit;
@@ -133,7 +131,9 @@ final class ProductsController
             header('Location: ' . BASE_PATH . '/products?error=forbidden');
             exit;
         }
+
         $this->productsRepository->delete($id);
+
         header('Location: ' . BASE_PATH . '/products?success=deleted');
         exit;
     }

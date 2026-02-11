@@ -7,6 +7,7 @@ final class ProductsModel
 {
     private ?int $id;
     private int $factionId;
+    private string $factionName;
     private string $name;
     private string $description;
     private float $price;
@@ -19,17 +20,19 @@ final class ProductsModel
     public function __construct(
         ?int $id,
         int $factionId,
+        string $factionName,
         string $name,
         string $description,
         float $price,
         string $imageUrl,
         int $stockQuantity,
         string $createdAt,
-        ?string $updatedAt,
-        ?string $deletedAt
+        ?string $updatedAt = null,
+        ?string $deletedAt = null
     ) {
         $this->id = $id;
         $this->factionId = $factionId;
+        $this->factionName = $factionName;
         $this->name = $name;
         $this->description = $description;
         $this->price = $price;
@@ -43,13 +46,24 @@ final class ProductsModel
     /* GETTERS */
 
     public function getId(): ?int { return $this->id; }
+
     public function getFactionId(): int { return $this->factionId; }
+
+    public function getFactionName(): string { return $this->factionName; }
+
     public function getName(): string { return $this->name; }
+
     public function getDescription(): string { return $this->description; }
+
     public function getPrice(): float { return $this->price; }
+
     public function getImageUrl(): string { return $this->imageUrl; }
+
     public function getStockQuantity(): int { return $this->stockQuantity; }
+
     public function getCreatedAt(): string { return $this->createdAt; }
+
     public function getUpdatedAt(): ?string { return $this->updatedAt; }
+
     public function getDeletedAt(): ?string { return $this->deletedAt; }
 }
